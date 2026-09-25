@@ -1,0 +1,49 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+
+metadata:
+  name: order-api
+  labels:
+    app: order-api
+
+spec:
+  # The Deployment that this HPA will scale.
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: order-api
+
+  # Keep at least two API pods available.
+  # Environment overlays can change this value later.
+  minReplicas: 2
+
+  # Prevent unlimited scaling during unexpected traffic spikes.
+  # This can be increased after observing real workload behavior.
+  maxReplicas: 6
+
+  # Scale when average CPU usage across the pods
+  # reaches approximately 70% of the requested CPU.
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+  # Controls how aggressively Kubernetes changes
+  # the number of API replicas.
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
