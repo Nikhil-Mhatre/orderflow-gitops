@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+
+metadata:
+  # All OrderFlow application workloads run in this namespace.
+  # Keeping workloads in one namespace makes access control,
+  # resource management, and troubleshooting easier.
+  name: orderflow
