@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reuse the common order-api Kubernetes resources.
+# The base contains the Deployment, Service, ConfigMap,
+# HPA, and PDB.
+resources:
+  - ../../../apps/order-api
+
+# Development uses a specific image version.
+# CI/CD can update this tag to the Git commit SHA
+# when a new application image is released.
+images:
+  - name: order-api
+    newName: order-api
+    newTag: dev
