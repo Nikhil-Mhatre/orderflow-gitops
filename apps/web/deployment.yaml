@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: orderflow-web
+  labels:
+    app: orderflow-web
+
+spec:
+  # Run two frontend pods so one pod can remain available
+  # if the other is restarted or temporarily unavailable.
+  replicas: 2
+
+  # The Deployment manages pods with this label.
+  selector:
+    matchLabels:
+      app: orderflow-web
+
+  # Replace old pods gradually during a new deployment.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  template:
+    metadata:
+      labels:
+        app: orderflow-web
+
+    spec:
+      containers:
+        - name: web
+
+          # The environment Kustomization will replace this
+          # with the exact ECR image and Git SHA to deploy.
+          image: orderflow-web:latest
+
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+
+          # Non-sensitive frontend configuration comes from
+          # the ConfigMap.
+          envFrom:
+            - configMapRef:
+                name: orderflow-web-config
+
+          # Readiness determines whether this pod should
+          # receive traffic from the Kubernetes Service.
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # Liveness determines whether Kubernetes should
+          # restart an unhealthy application container.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # Requests reserve resources for the container.
+          # Limits prevent one pod from consuming excessive resources.
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

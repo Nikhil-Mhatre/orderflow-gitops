@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: order-worker
+  labels:
+    app: order-worker
+
+spec:
+  # Start with two worker pods so message processing can continue
+  # if one pod becomes unavailable.
+  replicas: 2
+
+  # The Deployment manages pods with this label.
+  selector:
+    matchLabels:
+      app: order-worker
+
+  # Replace old worker pods gradually when a new image is deployed.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  template:
+    metadata:
+      labels:
+        app: order-worker
+
+    spec:
+      # This will later be connected to AWS workload identity.
+      # The worker needs AWS permissions for services such as SQS
+      # and Secrets Manager.
+      serviceAccountName: order-worker
+
+      # Give the worker time to finish processing an SQS message
+      # before Kubernetes forcefully stops the container.
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: order-worker
+
+          # The environment Kustomization will replace this image
+          # with the exact image/tag that should be deployed.
+          image: order-worker:latest
+
+          # Worker configuration is supplied through a ConfigMap.
+          # Sensitive values should come from AWS Secrets Manager.
+          envFrom:
+            - configMapRef:
+                name: order-worker-config
+
+          # Workers do not expose an HTTP endpoint, so we do not
+          # configure a Kubernetes Service or HTTP probe here.
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

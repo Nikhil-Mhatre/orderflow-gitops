@@ -1,0 +1,17 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+
+metadata:
+  name: order-worker
+  labels:
+    app: order-worker
+
+spec:
+  # Keep at least one worker pod available during
+  # voluntary disruptions such as node maintenance.
+  minAvailable: 1
+
+  # The PDB applies to pods created by the order-worker Deployment.
+  selector:
+    matchLabels:
+      app: order-worker

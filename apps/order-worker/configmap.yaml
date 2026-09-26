@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: order-worker-config
+  labels:
+    app: order-worker
+
+data:
+  # AWS region where the worker's AWS resources are located.
+  # Environment overlays can change this for different environments.
+  AWS_REGION: "ap-south-1"
+
+  # SQS queue consumed by the order worker.
+  # Keep the queue name here rather than hard-coding it in the image.
+  QUEUE_NAME: "order-events"
+
+  # Controls how many messages the worker requests from SQS
+  # in one polling operation.
+  SQS_BATCH_SIZE: "10"
+
+  # Time in seconds that the worker waits before polling SQS again
+  # when no messages are immediately available.
+  SQS_POLL_INTERVAL_SECONDS: "5"
