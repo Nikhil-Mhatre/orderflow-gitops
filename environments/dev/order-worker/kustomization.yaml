@@ -11,5 +11,5 @@ resources:
 # of the application image.
 images:
   - name: order-worker
-    newName: order-worker
-    newTag: dev
+    newName: nikhilmhatre0317/order-worker
+    newTag: latest

@@ -12,5 +12,5 @@ resources:
 # when a new application image is released.
 images:
   - name: order-api
-    newName: order-api
-    newTag: dev
+    newName: nikhilmhatre0317/order-api
+    newTag: latest
