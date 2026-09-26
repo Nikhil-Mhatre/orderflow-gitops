@@ -12,5 +12,5 @@ resources:
 # of the application image.
 images:
   - name: orderflow-web
-    newName: orderflow-web
-    newTag: dev
+    newName: nikhilmhatre0317/orderflow-web
+    newTag: latest
