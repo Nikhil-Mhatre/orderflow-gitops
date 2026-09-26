@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: order-api-config
+  labels:
+    app: order-api
+
+data:
+  # Tells the application which environment it is running in.
+  # The environment overlay can replace this value for dev/prod.
+  NODE_ENV: "production"
+
+  # AWS region used by the AWS SDK when communicating with
+  # services such as EventBridge.
+  AWS_REGION: "ap-south-1"
+
+  # EventBridge event bus used by the Order API to publish
+  # the OrderCreated event.
+  EVENT_BUS_NAME: "orderflow"
+
+  # The API listens on this port inside the container.
+  # This matches the containerPort defined in deployment.yaml.
+  PORT: "3000"

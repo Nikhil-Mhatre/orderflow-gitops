@@ -1,0 +1,17 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+
+metadata:
+  name: orderflow-web
+  labels:
+    app: orderflow-web
+
+spec:
+  # Keep at least one web pod available during
+  # voluntary disruptions such as node maintenance.
+  minAvailable: 1
+
+  # The PDB applies to pods created by the orderflow-web Deployment.
+  selector:
+    matchLabels:
+      app: orderflow-web

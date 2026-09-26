@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: order-api
+  labels:
+    app: order-api
+
+spec:
+  # Number of API pods running under normal conditions.
+  # Environment-specific values can be changed later with Kustomize.
+  replicas: 2
+
+  # Deployment uses this label to identify the pods it manages.
+  selector:
+    matchLabels:
+      app: order-api
+
+  # Controls how new versions replace old pods.
+  # maxUnavailable: 0 keeps existing capacity available during deployment.
+  # maxSurge: 1 allows one extra pod while the new version starts.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  template:
+    metadata:
+      labels:
+        app: order-api
+
+    spec:
+      # The API will eventually use a dedicated AWS/Kubernetes
+      # ServiceAccount for least-privilege AWS access.
+      serviceAccountName: order-api
+
+      containers:
+        - name: order-api
+
+          # The actual image/tag will be supplied by the environment
+          # Kustomization rather than hard-coded here.
+          image: order-api:latest
+
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+
+          # Non-sensitive configuration belongs in a ConfigMap.
+          # Secrets should come from AWS Secrets Manager integration.
+          envFrom:
+            - configMapRef:
+                name: order-api-config
+
+          # Kubernetes uses readiness to decide whether this pod
+          # is ready to receive traffic from the Service.
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # Kubernetes uses liveness to determine whether the
+          # application needs to be restarted.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # Requests reserve the expected minimum resources.
+          # Limits prevent a single pod from consuming unlimited resources.
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

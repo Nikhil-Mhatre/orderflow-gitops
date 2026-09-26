@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: orderflow-web-config
+  labels:
+    app: orderflow-web
+
+data:
+  # API endpoint used by the frontend to communicate with
+  # the Order API.
+  #
+  # Keep this as a Kubernetes Service name because the API
+  # is exposed internally within the cluster.
+  API_BASE_URL: "http://order-api"
+
+  # Identifies the environment in which the web application runs.
+  # The dev/prod Kustomize overlays can override this value later.
+  NODE_ENV: "production"

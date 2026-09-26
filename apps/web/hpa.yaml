@@ -1,0 +1,49 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+
+metadata:
+  name: orderflow-web
+  labels:
+    app: orderflow-web
+
+spec:
+  # The Deployment that this HPA will scale.
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: orderflow-web
+
+  # Keep at least two frontend pods available.
+  # Environment overlays can change this later if required.
+  minReplicas: 2
+
+  # Prevent uncontrolled scaling during unexpected traffic spikes.
+  maxReplicas: 6
+
+  # Scale when average CPU usage reaches approximately 70%
+  # of the CPU requested by each pod.
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+  # Scale up reasonably quickly when traffic increases.
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+
+    # Scale down more slowly to avoid removing capacity
+    # immediately after a short traffic decrease.
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60

@@ -1,0 +1,17 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+
+metadata:
+  name: order-api
+  labels:
+    app: order-api
+
+spec:
+  # Keep at least one order-api pod available during
+  # voluntary disruptions such as node maintenance.
+  minAvailable: 1
+
+  # The PDB applies to pods belonging to the order-api Deployment.
+  selector:
+    matchLabels:
+      app: order-api
