@@ -20,6 +20,7 @@ spec:
       labels:
         app.kubernetes.io/name: worker
     spec:
+      serviceAccountName: orderflow-worker
       terminationGracePeriodSeconds: 30
       containers:
         - name: worker
