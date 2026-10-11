@@ -51,10 +51,10 @@ kubeconfig
 
 # *.secret.yaml
 # *.secret.yml
-secret.yaml
-secret.yml
-secrets.yaml
-secrets.yml
+# secret.yaml
+# secret.yml
+# secrets.yaml
+# secrets.yml
 
 # Never commit local certificate/private-key material
 *.key
