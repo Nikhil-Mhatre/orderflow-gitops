@@ -10,7 +10,7 @@ spec:
 
   generators:
     - git:
-        repoURL: https://github.com/YOUR_GITHUB_USERNAME/orderflow-gitops.git
+        repoURL: https://github.com/Nikhil-Mhatre/orderflow-gitops
         revision: main
         directories:
           - path: apps/*/overlays/prod
@@ -24,7 +24,7 @@ spec:
       project: default
 
       source:
-        repoURL: https://github.com/YOUR_GITHUB_USERNAME/orderflow-gitops.git
+        repoURL: https://github.com/Nikhil-Mhatre/orderflow-gitops
         targetRevision: main
         path: "{{ .path.path }}"
 
