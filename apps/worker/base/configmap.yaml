@@ -4,7 +4,6 @@ metadata:
   name: orderflow-worker-config
 data:
   NODE_ENV: "production"
-  AWS_REGION: "ap-south-1"
-  SQS_QUEUE_URL: "https://sqs.ap-south-1.amazonaws.com/YOUR_AWS_ACCOUNT_ID/orderflow-order-processing"
+  AWS_REGION: "us-east-1"
   SERVICE_NAME: "orderflow-order-worker"
   SERVICE_VERSION: "0.0.0"
