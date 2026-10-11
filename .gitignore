@@ -49,8 +49,8 @@ kubeconfig
 # Secrets
 # ============================================================
 
-*.secret.yaml
-*.secret.yml
+# *.secret.yaml
+# *.secret.yml
 secret.yaml
 secret.yml
 secrets.yaml
