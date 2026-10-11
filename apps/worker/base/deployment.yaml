@@ -25,9 +25,6 @@ spec:
         - name: worker
           image: your-dockerhub-user/orderflow-worker:placeholder
           imagePullPolicy: IfNotPresent
-          env:
-            - name: NODE_ENV
-              value: production
           envFrom:
             - configMapRef:
                 name: orderflow-worker-config
