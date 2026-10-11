@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: orderflow
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+
+  generators:
+    - git:
+        repoURL: https://github.com/YOUR_GITHUB_USERNAME/orderflow-gitops.git
+        revision: main
+        directories:
+          - path: apps/*/overlays/prod
+
+  template:
+    metadata:
+      name: "orderflow-{{ index .path.segments 1 }}"
+      labels:
+        app.kubernetes.io/part-of: orderflow
+    spec:
+      project: default
+
+      source:
+        repoURL: https://github.com/YOUR_GITHUB_USERNAME/orderflow-gitops.git
+        targetRevision: main
+        path: "{{ .path.path }}"
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: orderflow
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
