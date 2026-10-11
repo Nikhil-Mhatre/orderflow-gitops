@@ -4,5 +4,6 @@ namespace: orderflow
 resources:
   - ../../base
 images:
-  - name: nikhilmhatre0317/orderflow-frontend
+  - name: your-dockerhub-user/orderflow-frontend
+    newName: nikhilmhatre0317/orderflow-web
     newTag: "latest"

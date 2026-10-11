@@ -29,7 +29,7 @@ spec:
 
       containers:
         - name: api
-          image: nikhilmhatre0317/orderflow-api:latest
+          image: your-dockerhub-user/orderflow-api:placeholder
           imagePullPolicy: IfNotPresent
 
           ports:
