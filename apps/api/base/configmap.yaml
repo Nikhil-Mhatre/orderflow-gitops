@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: orderflow-api-config
 data:
-  NODE_ENV: "production"
+  NODE_ENV: "development"
   PORT: "3001"
   AWS_REGION: "us-east-1"
   EVENTBRIDGE_BUS_NAME: "orderflow-dev"

@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: orderflow-worker-config
 data:
-  NODE_ENV: "production"
+  NODE_ENV: "development"
   AWS_REGION: "us-east-1"
   SERVICE_NAME: "orderflow-order-worker"
   SERVICE_VERSION: "0.0.0"
