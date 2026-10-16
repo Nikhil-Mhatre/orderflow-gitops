@@ -8,5 +8,5 @@ patches:
   - path: configmap-patch.yaml
 images:
   - name: REPLACE_ME/orderflow-api
-    newName: REPLACE_ME/orderflow-api
-    newTag: "1.0.0"
+    newName: nikhilmhatre0317/orderflow-api
+    newTag: "latest"

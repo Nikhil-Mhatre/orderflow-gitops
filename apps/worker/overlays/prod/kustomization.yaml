@@ -5,5 +5,5 @@ resources:
   - ../../base
 images:
   - name: REPLACE_ME/orderflow-worker
-    newName: REPLACE_ME/orderflow-worker
-    newTag: "1.0.0"
+    newName: nikhilmhatre0317/orderflow-worker
+    newTag: "latest"
