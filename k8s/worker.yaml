@@ -16,9 +16,9 @@ spec:
       serviceAccountName: orderflow-app
       containers:
         - name: worker
-          image: nikhilmhatre0317/orderflow-worker:latest
+          image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/orderflow-dev-worker:REPLACE_ME
           envFrom:
             - configMapRef:
                 name: orderflow-config
             - secretRef:
-                name: orderflow-app-secrets
+                name: orderflow-secrets
