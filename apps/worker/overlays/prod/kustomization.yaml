@@ -4,6 +4,6 @@ namespace: orderflow
 resources:
   - ../../base
 images:
-  - name: your-dockerhub-user/orderflow-worker
-    newName: nikhilmhatre0317/orderflow-worker
-    newTag: "latest"
+  - name: REPLACE_ME/orderflow-worker
+    newName: REPLACE_ME/orderflow-worker
+    newTag: "1.0.0"

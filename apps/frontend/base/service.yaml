@@ -11,6 +11,6 @@ spec:
     app.kubernetes.io/name: frontend
   ports:
     - name: http
-      port: 3000
+      port: 80
       targetPort: http
       protocol: TCP

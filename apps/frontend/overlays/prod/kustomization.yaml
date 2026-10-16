@@ -3,7 +3,8 @@ kind: Kustomization
 namespace: orderflow
 resources:
   - ../../base
+  - ingress.yaml
 images:
-  - name: your-dockerhub-user/orderflow-frontend
-    newName: nikhilmhatre0317/orderflow-web
-    newTag: "latest"
+  - name: REPLACE_ME/orderflow-frontend
+    newName: REPLACE_ME/orderflow-frontend
+    newTag: "1.0.0"

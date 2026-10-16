@@ -5,13 +5,10 @@ metadata:
   labels:
     app.kubernetes.io/name: api
     app.kubernetes.io/part-of: orderflow
-
 spec:
   type: ClusterIP
-
   selector:
     app.kubernetes.io/name: api
-
   ports:
     - name: http
       port: 3001
