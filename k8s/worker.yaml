@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orderflow-worker
+  namespace: orderflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orderflow-worker
+  template:
+    metadata:
+      labels:
+        app: orderflow-worker
+    spec:
+      serviceAccountName: orderflow-app
+      containers:
+        - name: worker
+          image: nikhilmhatre0317/orderflow-worker:latest
+          envFrom:
+            - configMapRef:
+                name: orderflow-config
+            - secretRef:
+                name: orderflow-app-secrets

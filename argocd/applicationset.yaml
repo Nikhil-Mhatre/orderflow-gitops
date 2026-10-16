@@ -4,9 +4,6 @@ metadata:
   name: orderflow-apps
   namespace: argocd
 spec:
-  goTemplate: true
-  goTemplateOptions:
-    - missingkey=error
   generators:
     - git:
         repoURL: https://github.com/Nikhil-Mhatre/orderflow-gitops
@@ -15,7 +12,7 @@ spec:
           - path: apps/*/overlays/prod
   template:
     metadata:
-      name: "{{ index .path.segments 1 }}"
+      name: '{{path[1]}}'
       labels:
         app.kubernetes.io/part-of: orderflow
     spec:
@@ -23,7 +20,7 @@ spec:
       source:
         repoURL: https://github.com/Nikhil-Mhatre/orderflow-gitops
         targetRevision: main
-        path: "{{ .path.path }}"
+        path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc
         namespace: orderflow
