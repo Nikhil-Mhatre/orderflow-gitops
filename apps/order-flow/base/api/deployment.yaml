@@ -33,6 +33,11 @@ spec:
                 configMapKeyRef:
                   name: order-flow-config
                   key: AWS_REGION
+            - name: EVENTBRIDGE_SOURCE
+              valueFrom:
+                configMapKeyRef:
+                  name: order-flow-config
+                  key: EVENTBRIDGE_SOURCE
             - name: EVENT_BUS_NAME
               valueFrom:
                 configMapKeyRef:
