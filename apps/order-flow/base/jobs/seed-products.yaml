@@ -12,7 +12,6 @@ spec:
       containers:
         - name: seed-products
           image: seed-product:dev
-          command: ["node"]
           args:
             - dist/db/seed/products.seed.js
           env:
