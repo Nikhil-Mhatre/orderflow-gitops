@@ -89,3 +89,26 @@ kubectl logs deployments/api -n order-flow
 kubectl logs deployments/worker -n order-flow
 kubectl logs deployments/frontend -n order-flow
 ```
+
+## BUilding and tagging images
+
+```bash
+export AWS_REGION=us-east-1
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+export ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+export IMAGE_TAG=$(git rev-parse --short=12 HEAD)
+
+docker build --platform linux/amd64 \
+  -t "$ECR_REGISTRY/order-flow-dev/api:$IMAGE_TAG" \
+  -f backend/api/Dockerfile backend/api
+docker build --platform linux/amd64 \
+  -t "$ECR_REGISTRY/order-flow-dev/worker:$IMAGE_TAG" \
+  -f backend/worker/Dockerfile backend/worker
+docker build --platform linux/amd64 \
+  -t "$ECR_REGISTRY/order-flow-dev/frontend:$IMAGE_TAG" \
+  -f frontend/Dockerfile frontend
+
+docker push "$ECR_REGISTRY/order-flow-dev/api:$IMAGE_TAG"
+docker push "$ECR_REGISTRY/order-flow-dev/worker:$IMAGE_TAG"
+docker push "$ECR_REGISTRY/order-flow-dev/frontend:$IMAGE_TAG"
+```
