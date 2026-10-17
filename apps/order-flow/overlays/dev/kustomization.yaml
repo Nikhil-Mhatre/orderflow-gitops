@@ -8,10 +8,10 @@ resources:
 images:
   - name: frontend
     newName: 690532463350.dkr.ecr.us-east-1.amazonaws.com/order-flow-dev/frontend
-    newTag: 12af46c43309
+    newTag: bc601e4b9c76
   - name: api
     newName: 690532463350.dkr.ecr.us-east-1.amazonaws.com/order-flow-dev/api
-    newTag: 12af46c43309
+    newTag: bc601e4b9c76
   - name: worker
     newName: 690532463350.dkr.ecr.us-east-1.amazonaws.com/order-flow-dev/worker
-    newTag: 12af46c43309
+    newTag: bc601e4b9c76
