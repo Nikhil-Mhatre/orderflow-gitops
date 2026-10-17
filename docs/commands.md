@@ -39,17 +39,25 @@ echo
 terraform output
 ```
 
+## Check username & password in secret manager
+
+## Encode the password correctly
+
+```bash
+node -e 'console.log(encodeURIComponent(process.argv[1]))' 'YOUR_CURRENT_PASSWORD'
+```
+
 ## Create the Kubernetes Secret
 
 ```bash
-read -s -p "Database password: " DB_PASSWORD
+read -s -p "Database password: " ENCODED_PASSWORD
 echo
 
 kubectl create secret generic order-flow-secrets \
   -n order-flow \
-  --from-literal=DATABASE_URL="postgresql://DB_USER:${DB_PASSWORD}@DB_HOST:5432/DB_NAME"
+  --from-literal=DATABASE_URL="postgresql://DB_USER:${ENCODED_PASSWORD}@DB_HOST:5432/DB_NAME"
 
-unset DB_PASSWORD
+unset ENCODED_PASSWORD
 ```
 
 ## Rollout deployments
@@ -58,4 +66,26 @@ unset DB_PASSWORD
 kubectl rollout restart deployment/api -n order-flow
 kubectl rollout restart deployment/worker -n order-flow
 kubectl rollout restart deployment/frontend -n order-flow
+```
+
+## View Secret
+
+```bash
+kubectl get secret order-flow-secrets -n order-flow \
+  -o jsonpath='{.data.DATABASE_URL}' | base64 -d
+echo
+```
+
+## Download Certificate from Official AWS site for RDS (Select appropriate region)
+
+```bash
+https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html?utm_source=chatgpt.com#UsingWithRDS.SSL.CertificatesDownload
+```
+
+## Useful commands
+
+```bash
+kubectl logs deployments/api -n order-flow
+kubectl logs deployments/worker -n order-flow
+kubectl logs deployments/frontend -n order-flow
 ```
