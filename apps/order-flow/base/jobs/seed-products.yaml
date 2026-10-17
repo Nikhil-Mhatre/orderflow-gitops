@@ -11,7 +11,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: seed-products
-          image: 0afe473afaf1
+          image: seed-product:dev
           args:
             - dist/db/seed/products.seed.js
           env:
