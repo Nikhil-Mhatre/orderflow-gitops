@@ -17,6 +17,23 @@ spec:
           env:
             - name: NODE_ENV
               value: production
+            - name: PORT
+              value: "3000"
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: order-flow-config
+                  key: AWS_REGION
+            - name: EVENTBRIDGE_SOURCE
+              valueFrom:
+                configMapKeyRef:
+                  name: order-flow-config
+                  key: EVENTBRIDGE_SOURCE
+            - name: EVENT_BUS_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: order-flow-config
+                  key: EVENT_BUS_NAME
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
