@@ -6,3 +6,4 @@ resources:
   - api
   - worker
   - ingress
+  - jobs
