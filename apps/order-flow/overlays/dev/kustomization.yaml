@@ -15,6 +15,6 @@ images:
   - name: worker
     newName: 690532463350.dkr.ecr.us-east-1.amazonaws.com/order-flow-dev/worker
     newTag: 0afe473afaf1
-  - name: seed-products
+  - name: seed-product
     newName: 690532463350.dkr.ecr.us-east-1.amazonaws.com/order-flow-dev/api
     newTag: 0afe473afaf1
