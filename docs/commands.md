@@ -118,3 +118,13 @@ docker push "$ECR_REGISTRY/order-flow-dev/worker:$IMAGE_TAG"
 docker push "$ECR_REGISTRY/order-flow-dev/frontend:$IMAGE_TAG"
 docker push "$ECR_REGISTRY/order-flow-dev/api:$IMAGE_TAG"
 ```
+
+## Show files/folders as tree
+
+```bash
+find . \
+  -path '*/.*' -prune -o \
+  -path '*/node_modules' -prune -o \
+  -print | sed -e 's;[^/]*/;|   ;g;s;|   \([^|]\);+--- \1;'
+``
+```
