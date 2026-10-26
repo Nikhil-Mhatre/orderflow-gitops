@@ -1,0 +1,7 @@
+# EKS Auto Mode configuration example. Verify the current AWS schema for your cluster.
+apiVersion: eks.amazonaws.com/v1
+kind: IngressClassParams
+metadata:
+  name: alb
+spec:
+  scheme: internet-facing

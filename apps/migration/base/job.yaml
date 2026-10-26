@@ -1,0 +1,37 @@
+# Version the Job name for each migration release (for example api-migration-v2).
+# Kubernetes Job pod templates are immutable; do not repeatedly change this Job's image in place.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: api-migration-v1
+  labels:
+    app.kubernetes.io/name: api-migration
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 600
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api-migration
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: REPLACE_ME_MIGRATION_IMAGE
+          imagePullPolicy: IfNotPresent
+          # Adjust this command to match your migration image entrypoint.
+          command: ["./migrate"]
+          envFrom:
+            - configMapRef:
+                name: api-config
+            - secretRef:
+                name: api-secret
+                optional: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

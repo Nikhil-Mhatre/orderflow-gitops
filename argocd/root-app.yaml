@@ -1,0 +1,23 @@
+# Example root Application. Use this OR the root Application created by Terraform,
+# not both with the same metadata.name and namespace.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # Replace with the URL of this GitOps repository.
+    repoURL: https://github.com/REPLACE_ME/REPLACE_ME-gitops.git
+    targetRevision: main
+    path: environments/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false
+    syncOptions:
+      - CreateNamespace=true

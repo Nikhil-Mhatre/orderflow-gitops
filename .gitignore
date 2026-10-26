@@ -1,8 +1,12 @@
-# Local secrets and generated files
-secrets.env
+# Local/editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Local generated output
+rendered.yaml
+*.log
+
+# Never commit local secret values or kubeconfig files
 *.secret.yaml
-*.secret.yml
-.env
-.env.*
-!.env.example
-*.kubeconfig
+kubeconfig

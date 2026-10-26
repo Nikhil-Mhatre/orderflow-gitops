@@ -1,115 +1,50 @@
-# order-flow-gitops
+# GitOps repository for EKS + Argo CD
 
-GitOps repository for the Order Flow application. Argo CD reconciles this repository; Terraform owns AWS infrastructure.
+This repository is a starter GitOps layout for deploying an API, worker, database migration Job, and AWS EKS Auto Mode ALB ingress with Argo CD and Kustomize.
 
-## Repository layout
+## Repository flow
 
-```text
-order-flow-gitops/
-├── argocd/
-│   ├── root-application.yaml
-│   └── applications/
-│       └── order-flow-dev.yaml
-├── clusters/
-│   └── dev/
-│       └── kustomization.yaml
-├── apps/
-│   └── order-flow/
-│       ├── base/
-│       │   ├── namespace.yaml
-│       │   ├── frontend/
-│       │   ├── api/
-│       │   ├── worker/
-│       │   ├── ingress/
-│       │   └── kustomization.yaml
-│       └── overlays/
-│           └── dev/
-│               ├── kustomization.yaml
-│               └── configmap.yaml
-└── docs/
-```
+1. Terraform creates AWS infrastructure and installs Argo CD with the Helm provider.
+2. Argo CD's root Application tracks `environments/dev`.
+3. Kustomize composes the environment resources.
+4. GitHub Actions builds/pushes images to ECR and updates image references in this repository.
+5. Argo CD reconciles committed changes into EKS.
 
-## Before syncing
+## Before applying
 
-1. Update `argocd/applications/order-flow-dev.yaml` with this GitOps repository URL and branch.
-2. Replace `ACCOUNT_ID` in `apps/order-flow/overlays/dev/kustomization.yaml` with your AWS account ID. The image names assume the ECR repositories created by Terraform:
-   - `order-flow-dev/frontend`
-   - `order-flow-dev/api`
-   - `order-flow-dev/worker`
-3. Confirm the service ports and environment variable names match the actual application code. The examples assume frontend and API listen on port `3000`.
-4. Ensure the EKS worker Pod Identity association matches namespace `order-flow` and ServiceAccount `order-flow-worker`.
-5. Create the `order-flow-secrets` Kubernetes Secret in the `order-flow` namespace before syncing workloads. Do not commit real credentials.
+Search for `REPLACE_ME` and replace the placeholders. In particular:
+- Set the GitOps repository URL in `argocd/root-app.yaml` if you apply that file directly.
+- Set the API/worker/migration image repository values in the overlays to your ECR repositories.
+- Set the ingress hostname and confirm your EKS Auto Mode ingress settings and subnet discovery requirements.
+- Set application configuration and Secret references to match your app.
 
-## Secret setup for the dev environment
+Do not commit plaintext credentials. The Secret manifests here are examples with placeholder values only; preferably manage real secrets through AWS Secrets Manager and an integration such as External Secrets Operator.
 
-This repository intentionally does not commit database credentials. Create `secrets.env` locally with the variable names expected by the app (adjust to your code):
+## Deployment notes
 
-```dotenv
-DATABASE_URL=postgresql://APP_USER:APP_PASSWORD@DB_ENDPOINT:5432/orderflow
-```
-
-Then create the secret:
-
-```bash
-kubectl create namespace order-flow --dry-run=client -o yaml | kubectl apply -f -
-kubectl -n order-flow create secret generic order-flow-secrets \
-  --from-env-file=secrets.env \
-  --dry-run=client -o yaml | kubectl apply -f -
-rm secrets.env
-```
-
-Use a least-privilege application DB user. Do not put the RDS master password in Git. For a longer-lived setup, wire Secrets Manager to Kubernetes using External Secrets Operator or the Secrets Store CSI Driver and a dedicated IAM role. Terraform should own that integration and its IAM permissions.
-
-## Install / bootstrap Argo CD
-
-Argo CD is installed by Terraform. After it is installed and `kubectl` is configured for the Terraform-managed cluster:
-
-```bash
-kubectl apply -f argocd/root-application.yaml
-```
-
-The root Application tracks `clusters/dev`, which creates the `order-flow-dev` Application. That application deploys `apps/order-flow/overlays/dev`.
-
-Alternatively, bootstrap the child Application directly:
-
-```bash
-kubectl apply -f argocd/applications/order-flow-dev.yaml
-```
-
-Use one bootstrap path, not both. The root-app pattern is recommended.
-
-## Image publishing
-
-CI should build and push immutable images to ECR, then update the image tags in `apps/order-flow/overlays/dev/kustomization.yaml` via a pull request. Avoid `latest` for production. The initial `dev` tags are placeholders and will not pull successfully until images exist in ECR.
-
-## Routing and ALB
-
-The Ingress uses EKS Auto Mode's ALB controller:
-- `/api/*` routes to the `api` Service.
-- `/*` routes to the `frontend` Service.
-- Worker has no public Service or Ingress.
-
-The frontend should call the API using the same-origin path `/api`. Confirm that the API accepts this prefix or configure an appropriate rewrite in the app/proxy layer. For production, add ACM HTTPS listener configuration and DNS, and verify security groups and health checks.
+- The root Application in `argocd/root-app.yaml` is an example. If Terraform already creates the root Application through the Helm chart's `extraObjects`, avoid creating a duplicate root Application with the same name. Either use the Terraform-managed root Application or apply this file, not both.
+- `environments/dev/kustomization.yaml` composes the dev workload resources and shared ingress-class configuration.
+- The migration Job is kept separate from the main environment root composition. Run it deliberately through a dedicated Argo CD Application or controlled CI/CD workflow. See `argocd/migration-app.yaml`.
+- Job pod templates are immutable after creation. This example uses a versioned Job name (`api-migration-v1`) as a safe pattern. For each migration release, create a new uniquely named Job or use a controlled pipeline that deletes/recreates the Job after checking status.
+- EKS Auto Mode ALB support depends on a valid Ingress and cluster/network configuration. Review AWS documentation for the current required IngressClass/IngressClassParams schema and subnet tagging for your cluster before applying.
 
 ## Validate locally
 
-Install `kubectl` and `kustomize` (or use `kubectl kustomize`), then run:
+Requires `kubectl` and `kustomize` (or `kubectl kustomize`).
 
 ```bash
-kubectl kustomize apps/order-flow/overlays/dev
-kubectl kustomize clusters/dev
+kubectl kustomize environments/dev
+kubectl kustomize apps/migration/overlays/dev
 ```
 
-These commands render YAML; they do not contact the cluster. Then check the live cluster:
+Optionally validate rendered resources against your cluster:
 
 ```bash
-kubectl get applications -n argocd
-kubectl get ingress -n order-flow
-kubectl get pods -n order-flow
+kubectl apply --dry-run=server -k environments/dev
 ```
 
-## Important
+Server-side validation requires cluster access and the relevant CRDs to be installed.
 
-- The manifests are a starter template. Application-specific health endpoints, environment variables, port numbers, resource sizing, and API routing need to match the actual source code.
-- Do not commit credentials, Kubernetes Secret manifests containing real values, kubeconfigs, or Terraform state.
-- EKS Auto Mode provisions the ALB from the Ingress; do not install NGINX Ingress Controller or the AWS Load Balancer Controller for this standard Auto Mode setup.
+## Image update convention
+
+Keep images pinned to immutable tags or digests, for example a Git commit SHA. Avoid `latest` in shared environments. CI should build/push the image first, then commit the new image tag into the appropriate overlay.
