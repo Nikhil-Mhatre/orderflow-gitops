@@ -108,7 +108,13 @@ docker build --platform linux/amd64 \
   -t "$ECR_REGISTRY/order-flow-dev/frontend:$IMAGE_TAG" \
   -f frontend/Dockerfile frontend
 
+docker build \
+  --platform linux/amd64 \
+  -f Dockerfile.migrate \
+  -t "$ECR_REGISTRY/order-flow-dev/api:$IMAGE_TAG" .
+
 docker push "$ECR_REGISTRY/order-flow-dev/api:$IMAGE_TAG"
 docker push "$ECR_REGISTRY/order-flow-dev/worker:$IMAGE_TAG"
 docker push "$ECR_REGISTRY/order-flow-dev/frontend:$IMAGE_TAG"
+docker push "$ECR_REGISTRY/order-flow-dev/api:$IMAGE_TAG"
 ```
