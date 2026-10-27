@@ -54,7 +54,7 @@ spec:
     # Argo CD expects valid manifests here, such as a kustomization.yaml file.
     # This path is relative to the repository root.
     # It must exist in the selected branch: environments/dev.
-    path: environments/dev
+    path: bootstrap/dev
 
   # 'destination' identifies the Kubernetes cluster and default namespace
   # where Argo CD should apply resources from the source directory.
