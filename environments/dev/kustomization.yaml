@@ -5,5 +5,4 @@ resources:
   - ../../infrastructure/namespace
   - ../../infrastructure/ingress
   - ../../infrastructure/external-secrets-app.yaml
-  - api-dev-app.yaml
-  # - worker-dev-app.yaml
+  - ../../apps/api/overlays/dev/
