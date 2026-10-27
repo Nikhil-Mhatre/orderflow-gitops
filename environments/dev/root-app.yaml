@@ -23,7 +23,7 @@ kind: Application
 metadata:
   # Name shown in the Argo CD UI and used in Argo CD CLI commands.
   # Example: argocd app get root-app
-  name: orderflow-root-app
+  name: root-app-dev
 
   # Namespace where the Argo CD Application custom resource is stored.
   # This is normally the namespace where Argo CD is installed.
@@ -67,7 +67,7 @@ spec:
     # metadata.namespace. It does not move resources that explicitly specify
     # another namespace. Your Kustomize configuration may also set namespaces.
     # Review this value against the namespaces used by your Orderflow manifests.
-    namespace: orderflow-apps
+    namespace: apps-dev
 
   # 'syncPolicy' controls whether and how Argo CD applies Git changes.
   syncPolicy:
