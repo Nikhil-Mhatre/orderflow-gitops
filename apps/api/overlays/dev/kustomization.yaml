@@ -10,3 +10,30 @@ images:
   - name: REPLACE_ME_API_IMAGE
     newName: 690532463350.dkr.ecr.us-east-1.amazonaws.com/orderflow/api
     newTag: 08fc92ecca4979f13c68bf3b2edfb6eb0391605f
+
+# Define the RDS secret ARN once in this overlay.
+configMapGenerator:
+  - name: rds-secret-reference
+    literals:
+      - secret-arn=arn:aws:secretsmanager:us-east-1:690532463350:secret:REPLACE_WITH_ACTUAL_SECRET_ID
+    options:
+      disableNameSuffixHash: true
+
+# Copy the ARN into the ExternalSecret remoteRef.key fields.
+replacements:
+  - source:
+      kind: ConfigMap
+      name: rds-secret-reference
+      fieldPath: data.secret-arn
+    targets:
+      - select:
+          group: external-secrets.io
+          version: v1
+          kind: ExternalSecret
+          name: orderflow-secrets
+        fieldPaths:
+          - spec.data.[secretKey=username].remoteRef.key
+          - spec.data.[secretKey=password].remoteRef.key
+          - spec.data.[secretKey=host].remoteRef.key
+          - spec.data.[secretKey=port].remoteRef.key
+          - spec.data.[secretKey=dbname].remoteRef.key
