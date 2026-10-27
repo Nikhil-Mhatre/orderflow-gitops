@@ -15,7 +15,7 @@ images:
 configMapGenerator:
   - name: rds-secret-reference
     literals:
-      - secret-arn=arn:aws:secretsmanager:us-east-1:690532463350:secret:REPLACE_WITH_ACTUAL_SECRET_ID
+      - secret-arn=arn:aws:secretsmanager:us-east-1:690532463350:secret:rds!db-62c6e9ac-bb40-43ff-bd96-d2d1f6703f55-pgjCYt
     options:
       disableNameSuffixHash: true
 
