@@ -1,23 +1,93 @@
-# Example root Application. Use this OR the root Application created by Terraform,
-# not both with the same metadata.name and namespace.
+# ---------------------------------------------------------------------------
+# Argo CD Root Application for the Orderflow development environment
+# ---------------------------------------------------------------------------
+# This manifest tells Argo CD which Git repository and directory to watch.
+# Argo CD reads the Kubernetes/Kustomize manifests from that location and
+# continuously reconciles the cluster to match the desired state in Git.
+#
+# IMPORTANT:
+# - Use this manifest OR the equivalent root Application managed by Terraform.
+# - Do not create both with the same metadata.name and namespace; that causes
+#   ownership/conflict problems.
+# - This Application assumes Argo CD is already installed in the cluster.
+# ---------------------------------------------------------------------------
+
+# API group and version that define Argo CD Application resources.
+# This is an Argo CD custom resource, not a built-in Kubernetes Deployment.
 apiVersion: argoproj.io/v1alpha1
+
+# Declares that this Kubernetes object is an Argo CD Application.
 kind: Application
+
+# Metadata identifies the Application object itself inside Kubernetes.
 metadata:
-  name: root-app
+  # Name shown in the Argo CD UI and used in Argo CD CLI commands.
+  # Example: argocd app get root-app
+  name: orderflow
+
+  # Namespace where the Argo CD Application custom resource is stored.
+  # This is normally the namespace where Argo CD is installed.
+  # It is NOT the namespace where all application workloads must run.
   namespace: argocd
+
+# 'spec' defines what Argo CD should deploy and how it should reconcile it.
 spec:
+  # Argo CD Project used to govern this Application's permitted repositories,
+  # destinations, and resource types. 'default' is the built-in project.
+  # If your organization uses a restricted project, use that project name.
   project: default
+
+  # 'source' defines where Argo CD obtains the desired Kubernetes manifests.
   source:
-    # Replace with the URL of this GitOps repository.
+    # Git repository containing the Orderflow GitOps configuration.
+    # This must be your GitOps repo, not the Argo CD Helm chart repository.
+    # For a private repository, Argo CD must have credentials configured.
     repoURL: https://github.com/Nikhil-Mhatre/orderflow-gitops.git
+
+    # Git branch, tag, or commit Argo CD should track.
+    # 'main' means changes pushed to this branch can change the desired state.
+    # For stronger release reproducibility, production can track a protected
+    # branch, release tag, or specific commit according to your workflow.
     targetRevision: main
+
+    # Directory inside the repository containing the environment's entry point.
+    # Argo CD expects valid manifests here, such as a kustomization.yaml file.
+    # This path is relative to the repository root.
+    # It must exist in the selected branch: environments/dev.
     path: environments/dev
+
+  # 'destination' identifies the Kubernetes cluster and default namespace
+  # where Argo CD should apply resources from the source directory.
   destination:
+    # The in-cluster Kubernetes API server.
+    # This is the usual destination when Argo CD runs inside the target cluster.
     server: https://kubernetes.default.svc
+
+    # Default namespace for namespaced resources that do not specify their own
+    # metadata.namespace. It does not move resources that explicitly specify
+    # another namespace. Your Kustomize configuration may also set namespaces.
+    # Review this value against the namespaces used by your Orderflow manifests.
     namespace: default
+
+  # 'syncPolicy' controls whether and how Argo CD applies Git changes.
   syncPolicy:
+    # Enables automated synchronization: Argo CD can apply changes from Git
+    # without requiring a person to click Sync for every change.
     automated:
+      # If someone manually changes a managed resource in the cluster, Argo CD
+      # attempts to restore the value declared in Git.
       selfHeal: true
+
+      # Disables automatic deletion of live resources removed from Git.
+      # This is a cautious setting: removing a manifest from Git will not, by
+      # itself, cause Argo CD to delete the corresponding live resource.
+      # If enabled (true), Argo CD may delete resources removed from Git.
       prune: false
+
+    # Additional options that affect how Argo CD applies resources.
     syncOptions:
+      # Allows Argo CD to create the destination namespace if it does not exist.
+      # This applies to the destination namespace above; resources with their own
+      # metadata.namespace still need their intended namespaces to exist or be
+      # created by the manifests/other configuration.
       - CreateNamespace=true
