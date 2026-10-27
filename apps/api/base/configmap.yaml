@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: order-flow-config
-data:
-  AWS_REGION: us-east-1
-  EVENTBRIDGE_SOURCE: order-flow-api
-  EVENT_BUS_NAME: order-flow-dev-orders
-  SQS_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/690532463350/orderflow-order-events

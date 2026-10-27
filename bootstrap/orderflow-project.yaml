@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: orderflow
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Orderflow application and platform resources
+  sourceRepos:
+    - https://github.com/Nikhil-Mhatre/orderflow-gitops.git
+    - https://charts.external-secrets.io
+  destinations:
+    - namespace: api
+      server: https://kubernetes.default.svc
+    - namespace: external-secrets
+      server: https://kubernetes.default.svc
+  # External Secrets Operator needs to manage a ClusterSecretStore.
+  clusterResourceWhitelist:
+    - group: external-secrets.io
+      kind: ClusterSecretStore
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

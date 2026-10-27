@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  template:
+    spec:
+      containers:
+        - name: api
+          image: YOUR_ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/YOUR_API_REPOSITORY:YOUR_IMAGE_TAG

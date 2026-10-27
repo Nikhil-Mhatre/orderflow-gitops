@@ -1,7 +1,0 @@
-# Example dev-specific patch. Add this file to resources in kustomization.yaml if needed.
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: api
-spec:
-  replicas: 1

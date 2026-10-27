@@ -1,36 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
-namespace: app-dev
-
+namespace: api
 resources:
   - ../../base
-
-images:
-  - name: REPLACE_ME_API_IMAGE
-    newName: 690532463350.dkr.ecr.us-east-1.amazonaws.com/orderflow/api
-    newTag: 6d8969ed7b6d8a633a109a6777325bdf984651a5
-
-# Define the RDS secret ARN once in this overlay.
-configMapGenerator:
-  - name: rds-secret-reference
-    literals:
-      - secret-arn=arn:aws:secretsmanager:us-east-1:690532463350:secret:rds!db-62c6e9ac-bb40-43ff-bd96-d2d1f6703f55-pgjCYt
-    options:
-      disableNameSuffixHash: true
-
-# Copy the ARN into the ExternalSecret remoteRef.key fields.
-replacements:
-  - source:
-      kind: ConfigMap
-      name: rds-secret-reference
-      fieldPath: data.secret-arn
-    targets:
-      - select:
-          group: external-secrets.io
-          version: v1
-          kind: ExternalSecret
-          name: orderflow-secrets
-        fieldPaths:
-          - spec.data.[secretKey=username].remoteRef.key
-          - spec.data.[secretKey=password].remoteRef.key
+  - namespace.yaml
+patches:
+  - path: api-patch.yaml
