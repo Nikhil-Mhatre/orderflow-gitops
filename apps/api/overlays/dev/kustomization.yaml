@@ -34,6 +34,3 @@ replacements:
         fieldPaths:
           - spec.data.[secretKey=username].remoteRef.key
           - spec.data.[secretKey=password].remoteRef.key
-          - spec.data.[secretKey=host].remoteRef.key
-          - spec.data.[secretKey=port].remoteRef.key
-          - spec.data.[secretKey=dbname].remoteRef.key
