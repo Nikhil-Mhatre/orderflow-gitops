@@ -1,126 +1,78 @@
-# GitOps starter — API service (EKS + Argo CD)
+# GitOps starter: API service on Amazon EKS
 
-This repository is a starter for deploying **the API service only**. Terraform remains responsible for AWS infrastructure: VPC, EKS Auto Mode, RDS for PostgreSQL, Secrets Manager, IAM/EKS Pod Identity associations, EventBridge, SQS and the dead-letter queue. Argo CD manages Kubernetes add-ons and application manifests from this repository.
+This repository is a starter for bootstrapping an API workload with Argo CD. It intentionally contains Kubernetes/GitOps manifests only; AWS infrastructure is managed separately by Terraform.
 
-> Terminology note: this template assumes **AWS EKS**, not Azure AKS, because the infrastructure described uses VPC, RDS, Secrets Manager and EKS Auto Mode.
+## Assumptions
 
-## What this repo manages
+- **Amazon EKS Auto Mode**, not Azure AKS. VPC, RDS for PostgreSQL, Secrets Manager, EventBridge, SQS, and DLQ are AWS services.
+- Terraform creates the AWS infrastructure and the IAM permissions/Pod Identity association needed by the External Secrets Operator (ESO) and/or application.
+- Argo CD is installed during infrastructure provisioning. One-time cluster bootstrap (such as registering this repo in Argo CD) is performed manually.
+- The API image is already built and pushed to ECR by CI.
+- RDS uses `manage_master_user_password = true`, so AWS RDS manages the master credential in Secrets Manager.
 
-- External Secrets Operator (ESO), installed by Argo CD from its upstream Helm chart.
-- A `ClusterSecretStore` that reads AWS Secrets Manager using the AWS credentials available to the ESO controller pod.
-- An `ExternalSecret` that synchronizes the database credentials into a Kubernetes Secret.
-- The API Deployment and Service, with the database Secret exposed as environment variables.
-
-It does **not** create AWS infrastructure or IAM roles/policies. Those are Terraform responsibilities.
+If you actually mean Azure AKS, this repository's AWS-specific External Secrets configuration and identity assumptions need to be replaced.
 
 ## Repository layout
 
 ```text
 .
+├── README.md
 ├── bootstrap/
-│   ├── root-application.yaml
-│   ├── orderflow-project.yaml
+│   └── root-app.yaml
 ├── platform/
 │   └── external-secrets/
-│       ├── application.yaml
-│       └── resources/
-│           ├── kustomization.yaml
-│           ├── cluster-secret-store.yaml
-│           └── external-secret.yaml
+│       ├── kustomization.yaml
+│       ├── namespace.yaml
+│       ├── helm-repository-notes.md
+│       └── helm-release.yaml
 └── apps/
     └── api/
+        ├── kustomization.yaml
         ├── base/
+        │   ├── namespace.yaml
+        │   ├── serviceaccount.yaml
         │   ├── deployment.yaml
         │   ├── service.yaml
+        │   ├── external-secret.yaml
         │   └── kustomization.yaml
         └── overlays/
             └── dev/
                 ├── kustomization.yaml
-                └── api-patch.yaml
+                └── patch-replicas.yaml
 ```
 
-## Before applying
+## Before deploying
 
-Replace the example values in `platform/external-secrets/resources/external-secret.yaml` and the API overlay with your actual values.
+Replace these placeholders:
+- `REPLACE_WITH_AWS_REGION`
+- `REPLACE_WITH_AWS_ACCOUNT_ID`
+- `REPLACE_WITH_ECR_REPOSITORY`
+- `REPLACE_WITH_IMAGE_TAG`
+- `REPLACE_WITH_RDS_MANAGED_SECRET_ARN`
+- `REPLACE_WITH_EKS_CLUSTER_NAME` (only if used in your identity setup)
 
-Important integration assumptions:
+The RDS-managed secret ARN can include a generated suffix. Avoid manually copying the database host, port, or password into Kubernetes manifests. This starter uses the **AWS Secrets Manager secret ARN** as the lookup key, while ESO writes selected JSON fields to a Kubernetes Secret.
 
-1. The EKS cluster and Argo CD already exist.
-2. You bootstrap Argo CD's root Application manually once the cluster is running.
-3. The ESO controller's Kubernetes service account has an **EKS Pod Identity association** to an IAM role created by Terraform.
-4. That IAM role can call `secretsmanager:GetSecretValue` and `secretsmanager:DescribeSecret` for the intended secret. Add `kms:Decrypt` if the secret uses a customer-managed KMS key.
-5. The secret in Secrets Manager is JSON and contains the keys `username` and `password`. The example uses a fixed **secret name**, not a hard-coded ARN.
-6. The API image understands the environment variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD`. Adjust these names to match your application.
+## Suggested bootstrap sequence
 
-### Database endpoint and database name
+1. Apply `bootstrap/root-app.yaml` once, after Argo CD is installed and can access this Git repository. Update `repoURL` and target branch first.
+2. The root Application deploys ESO and the API application.
+3. ESO installs first as a platform component. Its CRDs/controllers must be ready before the `SecretStore` and `ExternalSecret` resources can reconcile. For a production setup, use a staged bootstrap: install ESO, wait for it to become healthy, then enable the API app. See the note below.
+4. Configure AWS identity exactly once through Terraform: EKS Pod Identity association (recommended where supported) or IRSA. The IAM role used by ESO needs `secretsmanager:GetSecretValue` and `secretsmanager:DescribeSecret` on the target secret ARN, plus `kms:Decrypt` if a customer-managed KMS key encrypts it.
+5. Ensure the API application reads the Kubernetes Secret keys that ESO creates. The example assumes the secret JSON contains `username`, `password`, `host`, `port`, and `dbname`; adjust `remoteRef.property` and `secretKey` to match the actual RDS-managed secret JSON.
+6. Set the correct API container port, health endpoints, image, and environment variables for your app.
 
-An RDS-managed master secret generally stores credentials, not the RDS endpoint. Avoid manually copying the endpoint into Git. A clean pattern is for Terraform to create a separate application connection secret (or a JSON secret that includes `host`, `port`, and `dbname`) using RDS outputs and the managed master secret's value, with appropriate lifecycle and access controls. Alternatively, inject non-secret connection settings through a generated ConfigMap or another deployment-time configuration mechanism.
+## Important AWS Secrets Manager detail
 
-This template expects the referenced Secrets Manager secret to contain:
-```json
-{
-  "username": "example",
-  "password": "example",
-  "host": "example.cluster-xxxx.region.rds.amazonaws.com",
-  "port": "5432",
-  "dbname": "appdb"
-}
-```
-Do not commit real credentials to this repository. If you instead use the RDS-managed master secret directly, remove the `host`, `port`, and `dbname` property mappings from the `ExternalSecret` and supply those non-secret values separately.
+With `manage_master_user_password = true`, RDS creates/manages the master password secret. The secret JSON commonly contains keys such as `username`, `password`, `engine`, `host`, `port`, `dbClusterIdentifier`/`dbname` depending on the RDS resource and configuration. Verify the actual JSON in your account. The starter maps common fields but does not assume the DB host/port are hard-coded.
 
-## Bootstrap
+## Identity design
 
-After Argo CD is installed and you have manually configured access to this Git repository, apply the root Application:
+Prefer a dedicated IAM role for ESO with least-privilege read access to only the RDS secret. Associate it to the ESO controller service account using EKS Pod Identity (or IRSA if that is your chosen pattern). Do not put AWS access keys in Kubernetes Secrets. The API pod generally should not need permission to read Secrets Manager directly if ESO materializes the credential as a Kubernetes Secret.
 
-```bash
-kubectl apply -f bootstrap/root-application.yaml
-```
+## Operational cautions
 
-Update the `repoURL` in that file to the URL of your GitOps repository. The root Application points Argo CD at the ESO Application and API application definitions.
-
-## Recommended rollout order
-
-1. Confirm the EKS Pod Identity association for the ESO controller service account exists.
-2. Apply the root Application.
-3. Wait for ESO to become healthy.
-4. Confirm `ClusterSecretStore/aws-secrets-manager` is ready.
-5. Confirm the `api-db-credentials` ExternalSecret has synced.
-6. Deploy the API and check its logs and readiness.
-
-Useful checks:
-
-```bash
-kubectl get applications -n argocd
-kubectl get pods -n external-secrets
-kubectl get clustersecretstore
-kubectl describe clustersecretstore aws-secrets-manager
-kubectl get externalsecret -n api
-kubectl describe externalsecret api-db-credentials -n api
-kubectl get secret api-db-credentials -n api
-kubectl rollout status deployment/api -n api
-```
-
-Kubernetes Secret values are base64-encoded, not encrypted by base64. Restrict RBAC access to Secrets and enable EKS secret encryption / appropriate cluster security controls.
-
-## Customization checklist
-
-- Set `repoURL` and `targetRevision` in Argo CD Application manifests.
-- Set the Secrets Manager secret name in `external-secret.yaml`.
-- Set the API image in `apps/api/overlays/dev/api-patch.yaml`.
-- Set the container port, health endpoints, and environment variable names to match the API.
-- Ensure the ESO Pod Identity association uses the exact service account name and namespace installed by the Helm chart (`external-secrets` in namespace `external-secrets` by default).
-- Configure the API's own AWS permissions separately if it later needs to read AWS services directly. The API should not need Secrets Manager permissions when ESO materializes the secret into Kubernetes.
-
-
-## Note about Argo CD sync ordering
-
-The API `ExternalSecret` lives in the API namespace. The API overlay creates that namespace, but Argo CD does not guarantee ordering between separate Applications. If ESO reports that namespace `api` does not exist, create it once during bootstrap or move the `Namespace` manifest into a small platform namespace app that syncs before the API. The root Application deploys both child Applications; it does not enforce a dependency between them.
-
-For a first test, you can manually create the namespace with `kubectl create namespace api`, then let Argo CD manage the API workload.
-
-
-## Argo CD project: `orderflow`
-
-The child Applications (`external-secrets` and `api-dev`) use the dedicated Argo CD AppProject named `orderflow`, rather than `default`. The `bootstrap/orderflow-project.yaml` file defines allowed Git/chart sources, destination namespaces, and the `ClusterSecretStore` cluster-scoped resource required by External Secrets Operator. The root bootstrap Application intentionally remains in `default` so it can create the AppProject that the child Applications depend on.
-
-The project allows only the configured GitOps repository and External Secrets chart repository. Replace `YOUR_ORG/YOUR_GITOPS_REPO` consistently before applying. Review and tighten resource permissions further if your cluster policy requires it.
+- The database **master** account is usually not the best credential for an application. For production, create a least-privilege application database user and store that credential in Secrets Manager. This starter follows the requested master-secret path for initial testing.
+- Kubernetes Secrets are base64-encoded, not encrypted by that fact alone. Enable EKS envelope encryption / appropriate cluster controls and tightly restrict RBAC.
+- `ExternalSecret` syncs secret values into the cluster. Secret rotation behavior depends on the ESO refresh interval and the application’s ability to reload credentials.
+- Pin the ESO chart version before production use; do not rely on an unbounded latest chart.

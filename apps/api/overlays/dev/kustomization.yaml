@@ -3,6 +3,9 @@ kind: Kustomization
 namespace: api
 resources:
   - ../../base
-  - namespace.yaml
 patches:
-  - path: api-patch.yaml
+  - path: patch-replicas.yaml
+images:
+  - name: REPLACE_WITH_AWS_ACCOUNT_ID.dkr.ecr.REPLACE_WITH_AWS_REGION.amazonaws.com/REPLACE_WITH_ECR_REPOSITORY
+    newName: REPLACE_WITH_AWS_ACCOUNT_ID.dkr.ecr.REPLACE_WITH_AWS_REGION.amazonaws.com/REPLACE_WITH_ECR_REPOSITORY
+    newTag: REPLACE_WITH_IMAGE_TAG

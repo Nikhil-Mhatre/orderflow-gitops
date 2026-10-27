@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
+  namespace: api
   labels:
     app.kubernetes.io/name: api
 spec:
@@ -14,50 +15,51 @@ spec:
       labels:
         app.kubernetes.io/name: api
     spec:
+      serviceAccountName: api
       containers:
         - name: api
-          image: YOUR_ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/YOUR_API_REPOSITORY:latest
-          imagePullPolicy: Always
+          image: REPLACE_WITH_AWS_ACCOUNT_ID.dkr.ecr.REPLACE_WITH_AWS_REGION.amazonaws.com/REPLACE_WITH_ECR_REPOSITORY:REPLACE_WITH_IMAGE_TAG
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080
           env:
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: api-db-credentials
-                  key: DB_USER
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: api-db-credentials
-                  key: DB_PASSWORD
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
                   name: api-db-credentials
-                  key: DB_HOST
+                  key: host
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
                   name: api-db-credentials
-                  key: DB_PORT
+                  key: port
             - name: DB_NAME
               valueFrom:
                 secretKeyRef:
                   name: api-db-credentials
-                  key: DB_NAME
+                  key: dbname
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: api-db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: api-db-credentials
+                  key: password
           readinessProbe:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 20
+            initialDelaySeconds: 15
             periodSeconds: 20
           resources:
             requests:
