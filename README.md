@@ -9,3 +9,9 @@ kubectl apply -f argocd/projects/orderflow.yaml
 ```bash
 kubectl apply -f environments/dev/root-app.yaml
 ```
+
+## Create Root Application
+
+```bash
+kubectl apply -f environments/dev/root-app.yaml
+```
