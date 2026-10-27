@@ -29,6 +29,11 @@ spec:
   # are allowed, which helps prevent workload Applications changing other
   # cluster-wide settings.
   clusterResourceWhitelist:
+    # Namespace objects are cluster-scoped, even though they contain namespaced
+    # workloads. Allow this so the environment Application can create apps-dev
+    # and apps-prod from the namespace manifests in Git.
+    - group: ""
+      kind: Namespace
     - group: networking.k8s.io
       kind: IngressClass
     - group: eks.amazonaws.com
