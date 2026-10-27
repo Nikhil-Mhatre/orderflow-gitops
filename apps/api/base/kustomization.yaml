@@ -7,3 +7,4 @@ resources:
   - configmap.yaml
   - secretstore.yaml
   - externalsecret.yaml
+  - serviceaccount.yaml
