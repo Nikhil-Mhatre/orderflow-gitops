@@ -1,65 +1,101 @@
+# Defines a Kubernetes Deployment resource.
 apiVersion: apps/v1
 kind: Deployment
+
+# Identifies the Deployment and groups it under the Orderflow application.
 metadata:
   name: api
   labels:
     app.kubernetes.io/name: api
-    app.kubernetes.io/part-of: order-flow
+    app.kubernetes.io/part-of: orderflow
+
 spec:
+  # Runs one replica of the API application.
   replicas: 1
+
+  # Identifies the Pods managed by this Deployment.
   selector:
     matchLabels:
       app.kubernetes.io/name: api
+
+  # Defines the Pod template used to create API Pods.
   template:
     metadata:
+      # Labels the Pods so the Deployment can identify them.
       labels:
         app.kubernetes.io/name: api
-        app.kubernetes.io/part-of: order-flow
+        app.kubernetes.io/part-of: orderflow
+
     spec:
+      # Uses the API's Kubernetes ServiceAccount.
+      # This is separate from the External Secrets Operator's ServiceAccount.
+      serviceAccountName: api-service-account
+
       containers:
         - name: api
-          # Kustomize replaces this with the ECR image and tag from the overlay.
+          # Kustomize replaces this placeholder with the ECR image and tag.
           image: REPLACE_ME_API_IMAGE
+
+          # Pulls the image when it is not already available on the node.
           imagePullPolicy: IfNotPresent
 
+          # Exposes the API's HTTP port inside the container.
           ports:
             - name: http
               containerPort: 3000
               protocol: TCP
 
+          # Defines environment variables passed to the application.
           env:
+            # Sets the application runtime environment.
             - name: NODE_ENV
               value: production
+
+            # Configures the port on which the API listens.
             - name: PORT
               value: "3000"
+
+            # Reads AWS_REGION from the orderflow-config ConfigMap.
             - name: AWS_REGION
               valueFrom:
                 configMapKeyRef:
-                  name: order-flow-config
+                  name: orderflow-config
                   key: AWS_REGION
+
+            # Reads the EventBridge source identifier from the ConfigMap.
             - name: EVENTBRIDGE_SOURCE
               valueFrom:
                 configMapKeyRef:
-                  name: order-flow-config
+                  name: orderflow-config
                   key: EVENTBRIDGE_SOURCE
+
+            # Reads the EventBridge bus name from the ConfigMap.
             - name: EVENT_BUS_NAME
               valueFrom:
                 configMapKeyRef:
-                  name: order-flow-config
+                  name: orderflow-config
                   key: EVENT_BUS_NAME
+
+            # Reads DATABASE_URL from a Kubernetes Secret.
+            # External Secrets Operator can create this Secret from AWS Secrets Manager.
+            # The actual database connection string is not stored in this manifest.
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: order-flow-secrets
+                  name: orderflow-secrets
                   key: DATABASE_URL
 
-          # Confirm that /health exists in your API before enabling these probes.
+          # Checks whether the API is ready to receive traffic.
+          # Ensure the application implements the /health endpoint.
           readinessProbe:
             httpGet:
               path: /health
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
+
+          # Restarts the container if the application becomes unhealthy.
+          # Ensure the application implements the /health endpoint.
           livenessProbe:
             httpGet:
               path: /health
@@ -67,10 +103,15 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 20
 
+          # Defines the minimum resources requested and maximum resources allowed.
           resources:
             requests:
+              # Reserves 100 millicores of CPU.
               cpu: 100m
+              # Requests 128 MiB of memory.
               memory: 128Mi
             limits:
+              # Limits CPU usage to 500 millicores.
               cpu: 500m
+              # Limits memory usage to 512 MiB.
               memory: 512Mi

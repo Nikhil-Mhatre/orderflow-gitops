@@ -5,3 +5,5 @@ resources:
   - deployment.yaml
   - service.yaml
   - configmap.yaml
+  - secretstore.yaml
+  - externalsecret.yaml
