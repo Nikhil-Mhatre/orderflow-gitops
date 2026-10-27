@@ -4,6 +4,6 @@ kind: Kustomization
 resources:
   - ../../infrastructure/namespace
   - ../../infrastructure/ingress
-  - ../../apps/api/overlays/dev
-  - ../../apps/worker/overlays/dev
-  - ../../apps/ingress/overlays/dev
+  - ../../argocd/external-secrets-app.yaml
+  - api-dev-app.yaml
+  # - worker-dev-app.yaml

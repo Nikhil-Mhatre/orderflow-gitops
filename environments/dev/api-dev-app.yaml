@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: orderflow-api-dev
+  namespace: argocd
+  annotations:
+    # Process this app after the ESO child Application's sync wave.
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    # This is the Orderflow GitOps repository, not the Helm chart repository.
+    repoURL: https://github.com/Nikhil-Mhatre/orderflow-gitops.git
+    targetRevision: main
+    # Existing overlay includes apps/api/base, where the ExternalSecret lives.
+    path: apps/api/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: orderflow
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
