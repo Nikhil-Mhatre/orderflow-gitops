@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     # Replace with the URL of this GitOps repository.
-    repoURL: https://github.com/REPLACE_ME/REPLACE_ME-gitops.git
+    repoURL: https://github.com/Nikhil-Mhatre/orderflow-gitops.git
     targetRevision: main
     path: environments/dev
   destination:
